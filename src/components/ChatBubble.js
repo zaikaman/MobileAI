@@ -18,6 +18,45 @@ const ChatBubble = ({ message, isUser }) => {
     }
   };
 
+  const formatAndCopyCode = (text) => {
+    // Extract code between ``` markers
+    const codeMatch = text.match(/```(?:\w+)?\s*([\s\S]*?)```/);
+    if (codeMatch) {
+      const code = codeMatch[1].trim();
+      copyToClipboard(code);
+    }
+  };
+
+  const renderText = (text) => {
+    if (isCode) {
+      // Split text into parts before, during and after code block
+      const parts = text.split(/(```[\s\S]*?```)/);
+      return parts.map((part, index) => {
+        if (part.startsWith('```')) {
+          // Format code block
+          const code = part.replace(/```(\w+)?\s*([\s\S]*?)```/, '$2').trim();
+          return (
+            <TouchableOpacity 
+              key={index}
+              style={styles.codeBlock}
+              onLongPress={() => formatAndCopyCode(part)}
+              delayLongPress={500}
+            >
+              <Text style={styles.codeText}>{code}</Text>
+              <Text style={styles.copyHint}>Giữ để copy code</Text>
+            </TouchableOpacity>
+          );
+        }
+        return <Text key={index} style={[styles.messageText, isUser ? styles.userText : styles.botText]}>{part}</Text>;
+      });
+    }
+    return (
+      <Text style={[styles.messageText, isUser ? styles.userText : styles.botText]}>
+        {text}
+      </Text>
+    );
+  };
+
   const saveImage = async () => {
     try {
       const { status } = await MediaLibrary.requestPermissionsAsync();
@@ -71,9 +110,7 @@ const ChatBubble = ({ message, isUser }) => {
         </View>
       ) : (
         <TouchableOpacity onLongPress={() => copyToClipboard(message.text)} delayLongPress={500}>
-          <Text style={[styles.messageText, isUser ? styles.userText : styles.botText]}>
-            {message.text}
-          </Text>
+          {renderText(message.text)}
         </TouchableOpacity>
       )}
     </View>
@@ -118,7 +155,24 @@ const styles = StyleSheet.create({
     fontSize: 12,
     textAlign: 'center',
     marginTop: 5,
-  }
+  },
+  codeBlock: {
+    backgroundColor: '#1e1e1e',
+    padding: 10,
+    borderRadius: 8,
+    marginVertical: 5,
+  },
+  codeText: {
+    color: '#fff',
+    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
+    fontSize: 14,
+  },
+  copyHint: {
+    color: '#666',
+    fontSize: 12,
+    textAlign: 'center',
+    marginTop: 5,
+  },
 });
 
 export default ChatBubble;
