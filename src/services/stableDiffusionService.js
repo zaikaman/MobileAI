@@ -5,7 +5,9 @@ class StableDiffusionService {
   constructor() {
     this.API_URL = "https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-3.5-large-turbo";
     this.apiKeys = ENV.HUGGINGFACE_API_KEYS;
+    this.chatApiKeys = ENV.CHAT_API_KEYS;
     this.currentKeyIndex = 0;
+    this.currentChatKeyIndex = 0;
     this.failedKeys = new Set();
   }
 
@@ -26,9 +28,41 @@ class StableDiffusionService {
     throw new Error('No valid API keys available');
   }
 
+  async translateToEnglish(message) {
+    try {
+      const response = await axios.post(
+        `${ENV.CHAT_API_URL}/chat/completions`,
+        {
+          model: 'gpt-4o',
+          messages: [
+            {
+              role: "system",
+              content: "You are a translator. If the input is not in English, translate it to English. If it's already in English, return it as is. Only return the translation/original text, nothing else."
+            },
+            { role: "user", content: message }
+          ],
+          temperature: 0.3,
+          max_tokens: 200,
+        },
+        {
+          headers: {
+            'api-key': this.chatApiKeys[this.currentChatKeyIndex],
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      return response.data.choices[0].message.content;
+    } catch (error) {
+      console.error('Translation error:', error);
+      this.currentChatKeyIndex = (this.currentChatKeyIndex + 1) % this.chatApiKeys.length;
+      return message; // Return original message if translation fails
+    }
+  }
+
   async sendMessage(message) {
     try {
-      this.currentKeyIndex = (this.currentKeyIndex + 1) % this.apiKeys.length;
+      const translatedMessage = await this.translateToEnglish(message);
       const currentKey = this.getNextValidKey();
       
       const response = await fetch(this.API_URL, {
@@ -38,7 +72,7 @@ class StableDiffusionService {
         },
         method: "POST",
         body: JSON.stringify({
-          inputs: message,
+          inputs: translatedMessage,
         }),
       });
 
