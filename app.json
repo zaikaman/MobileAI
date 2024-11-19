@@ -1,0 +1,62 @@
+{
+  "expo": {
+    "name": "cool-bro-chat",
+    "slug": "cool-bro-chat",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "plugins": [
+      [
+        "expo-file-system",
+        {
+          "filePermission": "Access files for saving images"
+        }
+      ],
+      [
+        "expo-media-library",
+        {
+          "photosPermission": "Allow Cool Bro Chat to access your photos.",
+          "savePhotosPermission": "Allow Cool Bro Chat to save photos.",
+          "isAccessMediaLocationEnabled": true
+        }
+      ],
+      [
+        "expo-av",
+        {
+          "microphonePermission": "Cho phép mic để nói chuyện với anh trai ảo của bạn"
+        }
+      ],
+      [
+        "expo-background-fetch",
+        {
+          "backgroundFetch": true
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Ứng dụng cần quyền truy cập vào thư viện ảnh để gửi ảnh.",
+          "cameraPermission": "Ứng dụng cần quyền truy cập vào camera để chụp ảnh."
+        }
+      ]
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.coolbrochat"
+    },
+    "android": {
+      "package": "com.coolbrochat",
+      "permissions": [
+        "RECEIVE_BOOT_COMPLETED",
+        "WAKE_LOCK"
+      ]
+    },
+    "experiments": {
+      "newArchEnabled": true
+    },
+    "warnings": {
+      "newArchitectureWarning": false,
+      "notificationsWarning": false
+    }
+  }
+}
