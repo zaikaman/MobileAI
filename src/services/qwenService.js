@@ -1,7 +1,7 @@
 import { HfInference } from "@huggingface/inference";
+import ENV from '../config/env';
 
-const API_KEY = "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";
-const client = new HfInference(API_KEY);
+const client = new HfInference(ENV.HUGGINGFACE_API_KEY);
 
 class QwenService {
   constructor() {

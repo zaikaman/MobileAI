@@ -19,7 +19,6 @@ import ModelSelector from '../components/ModelSelector';
 import TypingIndicator from '../components/TypingIndicator';
 import { Ionicons } from '@expo/vector-icons';
 import ModelMenu from '../components/ModelMenu';
-import midjourneyService from '../services/midjourneyService';
 import notificationService from '../services/notificationService';
 import * as Notifications from 'expo-notifications';
 import backgroundTaskManager from '../services/backgroundTaskService';
@@ -64,8 +63,8 @@ export default function ChatScreen() {
             const service = {
               'ChatService': chatService,
               'GeminiService': geminiService,
-              'MidjourneyService': midjourneyService,
-              'StableDiffusionService': stableDiffusionService
+              'StableDiffusionService': stableDiffusionService,
+              'QwenService': qwenService
             }[pendingMessage.service];
 
             const response = await service.sendMessage(pendingMessage.text);
