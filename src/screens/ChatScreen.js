@@ -139,57 +139,41 @@ export default function ChatScreen() {
     }
   };
 
-  const sendMessage = async () => {
-    if (!inputText.trim() && !selectedImage || !currentService) return;
+  const handleSend = async () => {
+    if (!inputText.trim()) return;
+    
+    let retryCount = 0;
+    const MAX_RETRIES = 3;
 
-    const messageText = inputText.trim();
-    const messageObj = {
-      text: messageText,
-      image: selectedImage,
-      isUser: true
+    const tryRequest = async () => {
+      try {
+        setIsTyping(true);
+        const response = await currentService.sendMessage(inputText);
+        setMessages(prev => [...prev, { text: response, isUser: false }]);
+        return true;
+      } catch (error) {
+        if (error.response?.status === 429 && retryCount < MAX_RETRIES) {
+          retryCount++;
+          console.log(`Retry attempt ${retryCount}/${MAX_RETRIES}`);
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          return tryRequest();
+        }
+        throw error;
+      }
     };
 
-    setMessages(prev => [...prev, messageObj]);
-    setInputText('');
-    setSelectedImage(null);
-    setIsTyping(true);
-
     try {
-      if (appState.current === 'active') {
-        if (currentService.constructor.name === 'StableDiffusionService') {
-          // Nếu là Stable Diffusion, chỉ gửi text prompt
-          const response = await currentService.sendMessage(messageText);
-          setMessages(prev => [...prev, { 
-            text: response.text,
-            image: response.image,
-            isUser: false 
-          }]);
-        } else {
-          // Các service khác vẫn giữ nguyên logic cũ
-          const response = await currentService.sendMessage(messageText, selectedImage);
-          setMessages(prev => [...prev, { 
-            text: response,
-            isUser: false 
-          }]);
-        }
-      } else {
-        await AsyncStorage.setItem('pendingMessage', JSON.stringify({
-          text: messageText,
-          image: selectedImage,
-          service: currentService.constructor.name
-        }));
-        setIsTyping(false);
-        notificationService.scheduleNotification(
-          'Cool Bro Chat',
-          'Tin nhắn sẽ được xử lý khi bạn mở lại app nhé! 🔄'
-        );
-      }
+      const userMessage = { text: inputText, isUser: true };
+      setMessages(prev => [...prev, userMessage]);
+      setInputText('');
+      
+      await tryRequest();
     } catch (error) {
-      console.error('Message handling error:', error);
-      setMessages(prev => [...prev, { 
-        text: "Sorry bro, tôi đang gặp chút vấn đề. Thử lại sau nhé!",
-        isUser: false 
-      }]);
+      Alert.alert(
+        "Lỗi",
+        "Không thể kết nối với server. Vui lòng thử lại sau.",
+        [{ text: "OK" }]
+      );
     } finally {
       setIsTyping(false);
     }
@@ -279,7 +263,7 @@ export default function ChatScreen() {
 
           <TouchableOpacity 
             style={styles.sendButton} 
-            onPress={sendMessage}
+            onPress={handleSend}
           >
             <Ionicons name="send" size={24} color="#007AFF" />
           </TouchableOpacity>
